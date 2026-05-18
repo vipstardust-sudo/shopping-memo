@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="買い物メモ">
+  <meta name="theme-color" content="#1a1a1a">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/icon-192.png">
+  <title>買い物メモ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f7f5f0;
+      --surface: #ffffff;
+      --surface2: #f0ede6;
+      --text: #1a1a18;
+      --text2: #6b6860;
+      --text3: #a8a59e;
+      --accent: #2d6a4f;
+      --accent-light: #d8f3dc;
+      --danger: #c0392b;
+      --border: rgba(0,0,0,0.08);
+      --border2: rgba(0,0,0,0.14);
+      --radius: 14px;
+      --radius-sm: 8px;
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #141412;
+        --surface: #1e1e1b;
+        --surface2: #2a2a26;
+        --text: #f0ede6;
+        --text2: #9a9790;
+        --text3: #5a5854;
+        --accent: #52b788;
+        --accent-light: #1b3d2a;
+        --danger: #e74c3c;
+        --border: rgba(255,255,255,0.07);
+        --border2: rgba(255,255,255,0.12);
+      }
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html, body { height: 100%; }
+    body {
+      font-family: 'Noto Sans JP', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overscroll-behavior: none;
+    }
+    .app {
+      max-width: 480px;
+      margin: 0 auto;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      padding: 56px 20px 20px;
+      background: var(--bg);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    header h1 {
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      color: var(--text);
+    }
+    header h1 span {
+      color: var(--accent);
+    }
+    .progress-bar {
+      margin-top: 12px;
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 2px;
+      transition: width 0.4s ease;
+    }
+    .progress-label {
+      margin-top: 6px;
+      font-size: 11px;
+      color: var(--text3);
+      letter-spacing: 0.02em;
+    }
+    main { flex: 1; padding: 0 16px; padding-bottom: calc(140px + var(--safe-bottom)); }
+    .section { margin-bottom: 8px; }
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 16px 4px 8px;
+    }
+    .section-header .dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--accent);
+      flex-shrink: 0;
+    }
+    .section-header .dot.extra { background: var(--text3); }
+    .section-title {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text2);
+    }
+    .section-count {
+      margin-left: auto;
+      font-size: 11px;
+      color: var(--text3);
+    }
+    .item-list { display: flex; flex-direction: column; gap: 4px; }
+    .item-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 13px 14px;
+      cursor: pointer;
+      transition: opacity 0.2s, background 0.15s;
+      user-select: none;
+    }
+    .item-row:active { background: var(--surface2); }
+    .item-row.done { opacity: 0.38; }
+    .check-circle {
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      border: 1.5px solid var(--border2);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .item-row.done .check-circle {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+    .check-circle svg { display: none; }
+    .item-row.done .check-circle svg { display: block; }
+    .item-name {
+      flex: 1;
+      font-size: 15px;
+      font-weight: 400;
+      color: var(--text);
+      transition: text-decoration 0.2s;
+    }
+    .item-row.done .item-name { text-decoration: line-through; color: var(--text3); }
+    .delete-btn {
+      width: 28px; height: 28px;
+      border: none; background: none;
+      color: var(--text3);
+      font-size: 18px;
+      cursor: pointer;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      transition: background 0.15s, color 0.15s;
+      padding: 0;
+    }
+    .delete-btn:active { background: var(--surface2); color: var(--danger); }
+    .empty-state {
+      text-align: center;
+      padding: 20px 0;
+      color: var(--text3);
+      font-size: 13px;
+    }
+    .add-bar {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .add-bar input {
+      flex: 1;
+      font-family: 'Noto Sans JP', sans-serif;
+      font-size: 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 11px 14px;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .add-bar input::placeholder { color: var(--text3); }
+    .add-bar input:focus { border-color: var(--accent); }
+    .add-bar button {
+      font-family: 'Noto Sans JP', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-sm);
+      padding: 11px 16px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: opacity 0.15s;
+    }
+    .add-bar button:active { opacity: 0.8; }
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 8px 4px;
+    }
+    .bottom-bar {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      padding: 16px 20px calc(16px + var(--safe-bottom));
+      background: var(--bg);
+      border-top: 1px solid var(--border);
+      max-width: 480px;
+      margin: 0 auto;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+    }
+    .reset-btn {
+      width: 100%;
+      font-family: 'Noto Sans JP', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      background: var(--text);
+      color: var(--bg);
+      border: none;
+      border-radius: var(--radius);
+      padding: 16px;
+      cursor: pointer;
+      letter-spacing: 0.02em;
+      transition: opacity 0.15s;
+    }
+    .reset-btn:active { opacity: 0.75; }
+    .reset-btn:disabled { opacity: 0.3; cursor: default; }
+    .toast {
+      position: fixed;
+      top: 60px; left: 50%;
+      transform: translateX(-50%) translateY(-20px);
+      background: var(--text);
+      color: var(--bg);
+      font-size: 13px;
+      font-weight: 500;
+      padding: 10px 20px;
+      border-radius: 20px;
+      opacity: 0;
+      transition: opacity 0.2s, transform 0.2s;
+      pointer-events: none;
+      white-space: nowrap;
+      z-index: 100;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>買い物<span>メモ</span></h1>
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+    <div class="progress-label" id="progress-label">0 / 0 チェック済み</div>
+  </header>
+
+  <main>
+    <div class="section">
+      <div class="section-header">
+        <div class="dot"></div>
+        <span class="section-title">いつも買うもの</span>
+        <span class="section-count" id="regular-count"></span>
+      </div>
+      <div class="item-list" id="regular-list"></div>
+      <div class="add-bar">
+        <input type="text" id="regular-input" placeholder="追加する...">
+        <button onclick="addItem('regular')">追加</button>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="section">
+      <div class="section-header">
+        <div class="dot extra"></div>
+        <span class="section-title">今回だけ買うもの</span>
+        <span class="section-count" id="extra-count"></span>
+      </div>
+      <div class="item-list" id="extra-list"></div>
+      <div class="add-bar">
+        <input type="text" id="extra-input" placeholder="追加する...">
+        <button onclick="addItem('extra')">追加</button>
+      </div>
+    </div>
+  </main>
+
+  <div class="bottom-bar">
+    <button class="reset-btn" id="reset-btn" onclick="resetShopping()">✓ 買い物完了・リセット</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const STORAGE_KEY = 'kaimono_memo_v1';
+const DEFAULTS = ['牛乳', '卵', '食パン'];
+
+let state = { regular: [], extra: [] };
+
+function load() {
+  try {
+    const s = localStorage.getItem(STORAGE_KEY);
+    if (s) {
+      state = JSON.parse(s);
+    } else {
+      state.regular = DEFAULTS.map(n => ({ name: n, done: false }));
+      save();
+    }
+  } catch(e) {
+    state.regular = DEFAULTS.map(n => ({ name: n, done: false }));
+  }
+  render();
+}
+
+function save() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+function render() {
+  renderList('regular-list', state.regular, 'regular');
+  renderList('extra-list', state.extra, 'extra');
+  updateProgress();
+  document.getElementById('regular-count').textContent = state.regular.length + '品';
+  document.getElementById('extra-count').textContent = state.extra.length + '品';
+}
+
+function renderList(id, items, type) {
+  const el = document.getElementById(id);
+  if (!items.length) {
+    el.innerHTML = '<div class="empty-state">まだありません</div>';
+    return;
+  }
+  el.innerHTML = items.map((item, i) => `
+    <div class="item-row ${item.done ? 'done' : ''}" onclick="toggle('${type}',${i})">
+      <div class="check-circle">
+        <svg width="12" height="9" viewBox="0 0 12 9" fill="none">
+          <path d="M1 4L4.5 7.5L11 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <span class="item-name">${escHtml(item.name)}</span>
+      <button class="delete-btn" onclick="event.stopPropagation();del('${type}',${i})" aria-label="削除">×</button>
+    </div>
+  `).join('');
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function updateProgress() {
+  const all = [...state.regular, ...state.extra];
+  const done = all.filter(i => i.done).length;
+  const pct = all.length ? Math.round(done / all.length * 100) : 0;
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('progress-label').textContent = `${done} / ${all.length} チェック済み`;
+  document.getElementById('reset-btn').disabled = all.length === 0;
+}
+
+function toggle(type, i) {
+  state[type][i].done = !state[type][i].done;
+  save(); render();
+}
+
+function del(type, i) {
+  state[type].splice(i, 1);
+  save(); render();
+}
+
+function addItem(type) {
+  const input = document.getElementById(type + '-input');
+  const name = input.value.trim();
+  if (!name) return;
+  state[type].push({ name, done: false });
+  input.value = '';
+  save(); render();
+  showToast('追加しました');
+}
+
+function resetShopping() {
+  if (!confirm('買い物完了！「今回だけ」リストを削除し、チェックをリセットします。')) return;
+  state.extra = [];
+  state.regular = state.regular.map(i => ({ ...i, done: false }));
+  save(); render();
+  showToast('リセットしました');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 1800);
+}
+
+document.getElementById('regular-input').addEventListener('keydown', e => { if (e.key === 'Enter') addItem('regular'); });
+document.getElementById('extra-input').addEventListener('keydown', e => { if (e.key === 'Enter') addItem('extra'); });
+
+load();
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').catch(() => {});
+}
+</script>
+</body>
+</html>
